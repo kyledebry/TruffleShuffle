@@ -1,0 +1,318 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>WTF is javascript and how does it work???</title>
+  <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+  <style type="text/css">
+    #login,
+    #loggedin {
+      display: none;
+    }
+
+    .text-overflow {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 500px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div id="login">
+      <h1>WTF is Node.js and how does it work???</h1>
+      <a href="/login" class="btn btn-primary">Log in with Spotify</a>
+    </div>
+    <div id="loggedin">
+      <div id="user-profile">
+      </div>
+      <div id="playlists">
+      </div>
+      <div id="oauth">
+      </div>
+      <button class="btn btn-default" id="obtain-new-token">Obtain new token using the refresh token</button>
+    </div>
+  </div>
+
+  <script id="user-profile-template" type="text/x-handlebars-template">
+    <h1>Logged in as {{display_name}}</h1>
+      <div class="media">
+        <div class="pull-left">
+          <img class="media-object" width="150" src="{{images.0.url}}" />
+        </div>
+        <div class="media-body">
+          <dl class="dl-horizontal">
+            <dt>Display name</dt><dd class="clearfix">{{display_name}}</dd>
+            <dt>Id</dt><dd>{{id}}</dd>
+            <dt>Email</dt><dd>{{email}}</dd>
+            <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
+            <dt>Link</dt><dd><a href="{{href}}">{{href}}</a></dd>
+            <dt>Profile Image</dt><dd class="clearfix"><a href="{{images.0.url}}">{{images.0.url}}</a></dd>
+            <dt>Country</dt><dd>{{country}}</dd>
+          </dl>
+        </div>
+      </div>
+    </script>
+
+  <script id="playlists-template" type="text/x-handlebars-template">
+    <h1>Playlists</h1>
+      <div class="playlists">
+        <div class="playlists-body">
+          {{#each items}}
+            <button class="ui-button ui-widget ui-corner-all button" id="{{this.id}}">
+              <div class="playlist-item" id="playlist {{this.id}}">
+                {{this.name}}
+              </div>
+            </button>
+          {{/each}}
+        </div>
+      </div>
+    </script>
+
+
+  <script id="oauth-template" type="text/x-handlebars-template">
+    <h2>oAuth info</h2>
+      <dl class="dl-horizontal">
+        <dt>Access token</dt><dd class="text-overflow">{{access_token}}</dd>
+        <dt>Refresh token</dt><dd class="text-overflow">{{refresh_token}}</dd>
+      </dl>
+    </script>
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  <script>
+    (function() {
+
+      /**
+       * Obtains parameters from the hash of the URL
+       * @return Object
+       */
+      function getHashParams() {
+        var hashParams = {};
+        var e, r = /([^&;=]+)=?([^&;]*)/g,
+          q = window.location.hash.substring(1);
+        while (e = r.exec(q)) {
+          hashParams[e[1]] = decodeURIComponent(e[2]);
+        }
+        return hashParams;
+      }
+
+      var userProfileSource = document.getElementById('user-profile-template').innerHTML,
+        userProfileTemplate = Handlebars.compile(userProfileSource),
+        userProfilePlaceholder = document.getElementById('user-profile');
+
+      var oauthSource = document.getElementById('oauth-template').innerHTML,
+        oauthTemplate = Handlebars.compile(oauthSource),
+        oauthPlaceholder = document.getElementById('oauth');
+
+      var playlistsSource = document.getElementById('playlists-template').innerHTML,
+        playlistsTemplate = Handlebars.compile(playlistsSource),
+        playlistsPlaceholder = document.getElementById('playlists');
+
+      var params = getHashParams();
+
+      var access_token = params.access_token,
+        refresh_token = params.refresh_token,
+        error = params.error;
+
+      if (error) {
+        alert('There was an error during the authentication');
+      } else {
+        if (access_token) {
+          // render oauth info
+          oauthPlaceholder.innerHTML = oauthTemplate({
+            access_token: access_token,
+            refresh_token: refresh_token
+          });
+
+          user_id = "";
+
+          $.ajax({
+            url: 'https://api.spotify.com/v1/me',
+            headers: {
+              'Authorization': 'Bearer ' + access_token
+            },
+            success: function(response) {
+              userProfilePlaceholder.innerHTML = userProfileTemplate(response);
+              console.log(response.id);
+              user_id = response.id;
+
+              $('#login').hide();
+              $('#loggedin').show();
+            }
+          });
+
+          tracks = [];
+
+          $.ajax({
+            url: 'https://api.spotify.com/v1/me/playlists?limit=50',
+            headers: {
+              'Authorization': 'Bearer ' + access_token
+            },
+            success: function(response) {
+
+              console.log('############ RESPONSE #############');
+              console.log(response);
+              console.log('###################################')
+
+              playlists = response.items
+              playlistsPlaceholder.innerHTML = playlistsTemplate(response);
+
+              $('#login').hide();
+              $('#loggedin').show();
+
+              $("button").click(function() {
+
+                playlist_id = this.id;
+                console.log(playlist_id);
+
+                $.ajax({
+                  url: "https://api.spotify.com/v1/playlists/" + playlist_id + "?fields=name%2Ctracks(total)",
+                  headers: {
+                    'Authorization': 'Bearer ' + access_token
+                  },
+                  success: function(response) {
+                    console.log(response);
+                    orig_name = response.name;
+                    num_tracks = response.tracks.total;
+                    console.log(num_tracks);
+
+                    for (let i = 0; i < num_tracks; i += 100) {
+                      $.ajax({
+                        url: "https://api.spotify.com/v1/playlists/" + playlist_id + "/tracks?fields=items(track(id%2Calbum(id)))&offset=" + i,
+                        async: false,
+                        headers: {
+                          'Authorization': 'Bearer ' + access_token
+                        },
+                        success: function(response) {
+                          console.log(response.items);
+                          tracks = tracks.concat(response.items);
+                        },
+                        error: function(request, status, error) {
+                          alert(request.responseText);
+                        }
+                      });
+                    }
+
+                    console.log(tracks);
+
+                    tracks_formatted = [];
+
+                    for (let i = 0; i < num_tracks; i++) {
+                      tracks_formatted.push({
+                        song_id: tracks[i].track.id,
+                        album_id: tracks[i].track.album.id,
+                        index: null
+                      });
+                    }
+
+                    create_playlist(tracks_formatted, orig_name, access_token, user_id);
+                  }
+
+                });
+              });
+            }
+          });
+
+        } else {
+          // render initial screen
+          $('#login').show();
+          $('#loggedin').hide();
+        }
+
+        document.getElementById('obtain-new-token').addEventListener('click', function() {
+          $.ajax({
+            url: '/refresh_token',
+            data: {
+              'refresh_token': refresh_token
+            }
+          }).done(function(data) {
+            access_token = data.access_token;
+            oauthPlaceholder.innerHTML = oauthTemplate({
+              access_token: access_token,
+              refresh_token: refresh_token
+            });
+          });
+        }, false);
+      }
+
+    })();
+
+    function create_playlist(tracks, orig_name, access_token, user_id) {
+      console.log(tracks);
+      console.log(orig_name);
+      console.log(access_token);
+
+      new_name = "🔀" + orig_name;
+      console.log(new_name);
+
+      body = JSON.stringify({
+        name: new_name,
+        description: "TruffleShuffle of \"" + orig_name + "\"",
+        public: false
+      });
+
+      $.ajax({
+        type: "POST",
+        url: 'https://api.spotify.com/v1/users/' + user_id + '/playlists',
+        headers: {
+          'Authorization': 'Bearer ' + access_token
+        },
+        data: body,
+        success: function(response) {
+          console.log(response);
+          add_tracks(tracks, response.id, access_token);
+        },
+        error: function(request, status, error) {
+          alert(request.responseText);
+        }
+      });
+    }
+
+    function add_tracks(tracks, playlist_id, access_token) {
+      songs_left = tracks.length;
+
+      while (songs_left > 0) {
+        if (songs_left > 100) {
+          upload_tracks = tracks.slice(0, 100);
+          tracks = tracks.slice(100);
+        } else {
+          upload_tracks = tracks;
+          tracks = [];
+        }
+        upload_num = upload_tracks.length;
+
+        body = {uris:[]};
+
+        for (let i = 0; i < upload_num; i++) {
+          uri = 'spotify:track:' + upload_tracks[i].song_id;
+          body.uris.push(uri);
+        }
+
+        $.ajax({
+          type: "POST",
+          url: 'https://api.spotify.com/v1/playlists/' + playlist_id + '/tracks',
+          async: false,
+          headers: {
+            'Authorization': 'Bearer ' + access_token
+          },
+          data: JSON.stringify(body),
+          success: function(response) {
+            console.log(response);
+          },
+          error: function(request, status, error) {
+            alert(request.responseText);
+          }
+        });
+
+        songs_left = tracks.length;
+      }
+
+
+    }
+  </script>
+</body>
+
+</html>
