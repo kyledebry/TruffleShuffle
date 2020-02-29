@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>WTF is javascript and how does it work???</title>
+  <title>Truffle Shuffle</title>
   <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
   <style type="text/css">
     #login,
@@ -16,10 +16,41 @@
       white-space: nowrap;
       width: 500px;
     }
+  
+  .show {
+      display: block;
+  }
+  
+  #site-header {
+      text-align: left;
+      margin-bottom: 20px;
+      background-color: darkgray;
+      padding: 10px;
+      height: 120px;
+      border-bottom: 2px solid black;
+  }
+  
+  #header-img {
+      float: right;
+      height: 100px;
+      display: inline-block;
+      overflow: auto;
+  }
+  
+  #title {
+      display: inline;
+      line-height: 100px;
+  }
+  
   </style>
 </head>
 
 <body>
+    <div id="site-header">
+        <h1 id="title">Truffle Shuffle</h1>
+        <img src ="manatee2.png" id = "header-img"/>
+    </div>
+    
   <div class="container">
     <div id="login">
       <h1>WTF is Node.js and how does it work???</h1>
@@ -270,6 +301,54 @@
         }
       });
     }
+  
+    //shuffle here
+    var shuffle = function (array) {
+        
+        var currentIndex = array.length;
+        var temporaryValue, randomIndex;
+        
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+        
+        return array;
+        
+    };
+  
+    var array = [0];
+    var albumCount = 0;
+    tracks[0].index = 0;
+  
+    for(var i = 1; i < tracks.length; i++) {
+        if(tracks[i].album_id == tracks[i-1].album_id) {
+            tracks[i].index = albumCount;
+        } else {
+            albumCount++;
+            array.push(albumCount);
+            tracks[i].index = albumCount;
+        }
+    }
+  
+    shuffle(array);
+    shuffledPlaylist = [];
+  
+    for(var i = 0; i < array.length; i++) {
+        for(var j = 0; j < playlist.length; j++) {
+            if(tracks[j].index == array[i]) {
+                shuffledPlaylist.push(tracks[j]);
+            }
+        }
+    }
+
 
     function add_tracks(tracks, playlist_id, access_token) {
       songs_left = tracks.length;
@@ -309,7 +388,6 @@
 
         songs_left = tracks.length;
       }
-
 
     }
   </script>
