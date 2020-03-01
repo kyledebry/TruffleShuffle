@@ -42,6 +42,14 @@
       line-height: 100px;
   }
   
+  .playlist-button {
+      border: none;
+  }
+  
+  button:hover {
+      color:darkgray;
+  }
+  
   </style>
 </head>
 
@@ -79,7 +87,7 @@
       <div class="playlists">
         <div class="playlists-body">
           {{#each items}}
-          <button class="ui-button ui-widget ui-corner-all button" id="{{this.id}}">
+          <button class="playlist-button" id="{{this.id}}">
               <div class="playlist-item" id="playlist {{this.id}}">
                 {{this.name}}
               </div>
