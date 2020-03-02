@@ -44,9 +44,11 @@
 
   .playlist-button {
       border: none;
+      background-color: lightgray;
+      color: black;
       font-size: large;
-      margin: 5px;
-      padding: 10px;
+      margin: 3px;
+      padding: 2px;
       width: 100%;
       max-width: 500px;
   }
@@ -65,6 +67,16 @@
     font-size: x-large;
     width: 100%;
   }
+
+  @media only screen and (max-width:480px) {
+  .playlist-button {
+    font-size: xx-large;
+    margin: 5px;
+    padding: 3%;
+    width: 100%;
+    max-width: 100%;
+  }
+}
 
   </style>
 </head>
