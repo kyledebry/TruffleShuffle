@@ -12,6 +12,7 @@ var request = require('request'); // "Request" library
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
+const fs = require('fs');
 
 var client_id = 'a22edc9ffe0e4f9681ca9f8c1c6f5cd5'; // Your client id
 var client_secret = '0db163b67f3642a282e9b44c8f100b0e'; // Your secret
@@ -37,8 +38,8 @@ var stateKey = 'spotify_auth_state';
 var app = express();
 
 app.use(express.static(__dirname + '/public'))
-   .use(cors())
-   .use(cookieParser());
+  .use(cors())
+  .use(cookieParser());
 
 app.get('/login', function(req, res) {
 
@@ -90,22 +91,35 @@ app.get('/callback', function(req, res) {
       if (!error && response.statusCode === 200) {
 
         var access_token = body.access_token,
-            refresh_token = body.refresh_token;
+          refresh_token = body.refresh_token;
 
         var options = {
           url: 'https://api.spotify.com/v1/me',
-          headers: { 'Authorization': 'Bearer ' + access_token },
+          headers: {
+            'Authorization': 'Bearer ' + access_token
+          },
           json: true
         };
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
           console.log(body);
+          var today = new Date();
+          var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+          var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+          var dateTime = date+' '+time;
+          console.log(body);
+          fs.appendFile('log.txt', dateTime + '\n' + JSON.stringify(body) + '\n\n\n', (err) => {
+            if (err) throw err;
+            console.log('The login message was appended to file.');
+          });
         });
 
         var options = {
           url: 'https://api.spotify.com/v1/me/playlists',
-          headers: { 'Authorization': 'Bearer ' + access_token },
+          headers: {
+            'Authorization': 'Bearer ' + access_token
+          },
           json: true
         }
 
@@ -114,6 +128,15 @@ app.get('/callback', function(req, res) {
           console.log(error);
           console.log(response && response.statusCode);
           console.log(body);
+          // var today = new Date();
+          // var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+          // var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+          // var dateTime = date+' '+time;
+          // console.log(body);
+          // fs.appendFile('log.txt', dateTime + '\n' + JSON.stringify(body) + '\n\n\n', (err) => {
+          //   if (err) throw err;
+          //   console.log('The login message was appended to file.');
+          // });
         });
 
         // we can also pass the token to the browser to make requests from there
@@ -138,7 +161,9 @@ app.get('/refresh_token', function(req, res) {
   var refresh_token = req.query.refresh_token;
   var authOptions = {
     url: 'https://accounts.spotify.com/api/token',
-    headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
+    headers: {
+      'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+    },
     form: {
       grant_type: 'refresh_token',
       refresh_token: refresh_token

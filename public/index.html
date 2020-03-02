@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Truffle Shuffle</title>
+  <title>TruffleShuffle</title>
   <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
   <style type="text/css">
     #login,
@@ -44,11 +44,26 @@
 
   .playlist-button {
       border: none;
-      font-size: 20px;
+      font-size: large;
+      margin: 5px;
+      padding: 10px;
+      width: 100%;
+      max-width: 500px;
   }
 
   button:hover {
       color:darkgray;
+      background-color: lightblue;
+  }
+
+  button:active {
+    background-color: darkblue;
+    color: white;
+  }
+
+  .btn {
+    font-size: x-large;
+    width: 100%;
   }
 
   </style>
@@ -56,7 +71,7 @@
 
 <body>
     <div id="site-header">
-        <h1 id="title">Truffle Shuffle</h1>
+        <h1 id="title">TruffleShuffle</h1>
         <img src ="manatee2.png" id = "header-img"/>
     </div>
 
@@ -73,12 +88,16 @@
       </div>
 
     </div>
+    <h3>Made by <a href="https://github.com/kyledebry">Kyle DeBry</a> and <a href="https://github.com/nsimonelli">Nicole Simonelli</a>.</h3>
+    <h3> Named after <a href="https://www.citybeat.com/arts-culture/culture/blog/21092774/the-cincinnati-zoo-welcomes-20th-manatee-for-rehab-and-his-name-is-truffleshuffle">Truffleshuffle</a>, the Cincinnati Zoo's manatee.</h3>
+    <br></br>
   </div>
 
   <script id="user-profile-template" type="text/x-handlebars-template">
-    <h1>Logged in as {{display_name}}</h1>
+    <h1>Welcome, {{display_name}}!</h1>
     <div style="font-size: 20px;">
-        Shuffle playlists of symphonies and other multi-movement music while keeping the movements together
+        Shuffle playlists of symphonies and other multi-movement music while keeping the movements together.
+        Click a playlist below to generate a new shuffled playlist where songs from the same album are kept together!
       </div>
     </script>
 
